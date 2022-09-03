@@ -1,8 +1,8 @@
 require("dotenv/config")
 require("./db")
-
 const logger = require("morgan")
 const cors = require("cors")
+const isAuthenticated = require("./middleware/jwt.middleware")
 
 const express = require("express")
 const app = express()
@@ -20,8 +20,8 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 // routes
-// app.use(require("./routes/players.routes"))
-// app.use(require("./routes/games.routes"))
+app.use("/player", require("./routes/player.routes"))
+// app.use("/game", isAuthenticated, require("./routes/game.routes"))
 
 // error-handling
 app.use((req, res, next) => {
