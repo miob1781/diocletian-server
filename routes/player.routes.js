@@ -5,6 +5,7 @@ const mongoose = require("mongoose")
 const isAuthenticated = require("../middleware/jwt.middleware")
 
 const saltRounds = 10
+const regex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
 
 const Player = require("../models/player.model")
 
@@ -12,23 +13,13 @@ router.post("/signup", (req, res, next) => {
     const { username, email, password } = req.body
 
     if (!username) {
-        return res
-            .status(400)
-            .json({ errorMessage: "Please provide your username." });
+        return res.status(400).json({ errorMessage: "Please provide your username." });
     }
-
-    if (password.length < 8) {
-        return res.status(400).json({
-            errorMessage: "Your password needs to be at least 8 characters long.",
-        });
-    }
-
-    const regex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
   
     if (!regex.test(password)) {
-      return res.status(400).json( {
+      return res.status(400).json({
         errorMessage:
-          "Password needs to have at least 8 chars and must contain at least one number, one lowercase and one uppercase letter.",
+          "Password needs to have at least 8 characters and must contain at least one number, one lowercase and one uppercase letter.",
       });
     }
 
@@ -47,7 +38,11 @@ router.post("/signup", (req, res, next) => {
                     })
                 })
                 .then(newPlayer => {
-                    const payload = { username, email }
+                    const payload = {
+                        _id: newPlayer._id,
+                        username: newPlayer.username,
+                        email: newPlayer.email
+                    }
                     const authToken = jwt.sign(
                         payload,
                         process.env.TOKEN_SECRET,
@@ -68,8 +63,49 @@ router.post("/signup", (req, res, next) => {
 })
 
 router.post("/login", (req, res, next) => {
-    const { username, email, password } = req.body
-    
+    const { username, password } = req.body
+
+    if (!username) {
+        return res.status(400).json({ errorMessage: "Please provide your username." });
+    }
+  
+    if (!regex.test(password)) {
+      return res.status(400).json({
+        errorMessage:
+          "Password needs to have at least 8 characters and must contain at least one number, one lowercase and one uppercase letter.",
+      });
+    }
+
+    Player.findOne({ username })
+        .then(playerFromDB => {
+            if (!playerFromDB) {
+                return res.status(400).json({ errorMessage: "Wrong credentials." })
+            }
+            bcrypt.compare(password, playerFromDB.password)
+                .then(isSamePassword => {
+                    if (!isSamePassword) {
+                        return res.status(400).json({ errorMessage: "Wrong credentials." })
+                    }
+                    const payload = {
+                        _id: playerFromDB._id,
+                        username: playerFromDB.username,
+                        email: playerFromDB.email
+                    }
+                    const authToken = jwt.sign(
+                        payload,
+                        process.env.TOKEN_SECRET,
+                        { algorithm: "HS256", expiresIn: "6h" }
+                    )
+                    return res.status(200).json({ authToken })
+                })
+        })
+        .catch(err => {
+            next(err)
+        })
+})
+
+router.get("/verify", isAuthenticated, (req, res, next) => {
+    res.json(req.payload)
 })
 
 router.get("/:id", isAuthenticated, (req, res, next) => {
