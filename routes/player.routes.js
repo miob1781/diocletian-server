@@ -15,18 +15,29 @@ router.post("/signup", (req, res, next) => {
     if (!username) {
         return res.status(400).json({ errorMessage: "Please provide your username." });
     }
-  
+
+    if (!email) {
+        return res.status(400).json({ errorMessage: "Please provide your email." });
+    }
+
+    if (!password) {
+        return res.status(400).json({ errorMessage: "Please provide your password." });
+    }
+
     if (!regex.test(password)) {
-      return res.status(400).json({
-        errorMessage:
-          "Password needs to have at least 8 characters and must contain at least one number, one lowercase and one uppercase letter.",
-      });
+        return res.status(400).json({
+            errorMessage:
+                "Password needs to have at least 8 characters and must contain at least one number, one lowercase and one uppercase letter.",
+        });
     }
 
     Player.findOne({ username })
         .then(playerFromDB => {
             if (playerFromDB) {
                 return res.status(400).json({ errorMessage: "Username already taken." })
+            }
+            if (playerFromDB.email === email) {
+                return res.status(400).json({ errorMessage: "Email  already taken." })
             }
             return bcrypt.genSalt(saltRounds)
                 .then(salt => bcrypt.hash(password, salt))
@@ -68,12 +79,16 @@ router.post("/login", (req, res, next) => {
     if (!username) {
         return res.status(400).json({ errorMessage: "Please provide your username." });
     }
-  
+
+    if (!password) {
+        return res.status(400).json({ errorMessage: "Please provide your password." });
+    }
+
     if (!regex.test(password)) {
-      return res.status(400).json({
-        errorMessage:
-          "Password needs to have at least 8 characters and must contain at least one number, one lowercase and one uppercase letter.",
-      });
+        return res.status(400).json({
+            errorMessage:
+                "Password needs to have at least 8 characters and must contain at least one number, one lowercase and one uppercase letter.",
+        });
     }
 
     Player.findOne({ username })
@@ -89,7 +104,8 @@ router.post("/login", (req, res, next) => {
                     const payload = {
                         _id: playerFromDB._id,
                         username: playerFromDB.username,
-                        email: playerFromDB.email
+                        email: playerFromDB.email,
+                        connections: playerFromDB.connections
                     }
                     const authToken = jwt.sign(
                         payload,
@@ -108,19 +124,67 @@ router.get("/verify", isAuthenticated, (req, res, next) => {
     res.json(req.payload)
 })
 
-router.get("/:id", isAuthenticated, (req, res, next) => {
-    const { id } = req.params
-})
-
 router.put("/:id", isAuthenticated, (req, res, next) => {
     const { id } = req.params
     const { username, email, password } = req.body
-    
+
+    if (!username) {
+        return res.status(400).json({ errorMessage: "Please provide your username." });
+    }
+
+    if (!email) {
+        return res.status(400).json({ errorMessage: "Please provide your email." });
+    }
+
+    if (!password) {
+        return res.status(400).json({ errorMessage: "Please provide your password." });
+    }
+
+    if (!regex.test(password)) {
+        return res.status(400).json({
+            errorMessage:
+                "Password needs to have at least 8 characters and must contain at least one number, one lowercase and one uppercase letter.",
+        });
+    }
+
+    bcrypt.genSalt(saltRounds)
+        .then(salt => bcrypt.hash(password, salt))
+        .then(hashedPassword => {
+            return Player.findByIdAndUpdate(id, {
+                username,
+                email,
+                password: hashedPassword
+            })
+        })
+        .then(newPlayer => {
+            const playerData = {
+                _id: newPlayer._id,
+                username: newPlayer.username,
+                email: newPlayer.email,
+                connections: newPlayer.connections
+            }
+            return res.status(200).json({ playerData })
+        })
+        .catch(err => {
+            if (err instanceof mongoose.Error.ValidationError) {
+                return res.status(400).json({ errorMessage: err.message })
+            }
+            if (err.code === 11000) {
+                return res.status(400).json({ errorMessage: "Username must be unique." })
+            }
+            return res.status(500).json({ errorMessage: err.message })
+        })
 })
 
 router.delete("/:id", isAuthenticated, (req, res, next) => {
     const { id } = req.params
-
+    Player.findByIdAndDelete(id)
+        .then(() => {
+            res.status(204).send()
+        })
+        .catch(err => {
+            console.log("Error while deleting player: ", err);
+        })
 })
 
 module.exports = router
