@@ -27,14 +27,30 @@ const moveSchema = new Schema({
 })
 
 const gameModel = new Schema({
-    players: [{
-        type: Schema.Types.ObjectId,
-        ref: "Player", required: true
-    }],
-    numPlayers: {
-        type: Number,
+    status: {
+        type: String,
+        enum: ["created, playing, finished"],
         required: true
     },
+    numPlayers: {
+        type: Number,
+        enum: [2, 3, 4, 5, 6],
+        required: true
+    },
+    size: {
+        type: Number,
+        enum: [4, 5, 6, 7, 8, 9, 10],
+        required: true
+    },
+    density: {
+        type: String,
+        enum: ["sparse, medium, dense"],
+        required: true
+    },
+    players: [{
+        type: Schema.Types.ObjectId,
+        ref: "Player"
+    }],
     moves: [moveSchema],
     winner: {
         type: Schema.Types.ObjectId,

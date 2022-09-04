@@ -154,7 +154,7 @@ router.put("/:id", isAuthenticated, (req, res, next) => {
                 username,
                 email,
                 password: hashedPassword
-            })
+            }, { new: true })
         })
         .then(newPlayer => {
             const playerData = {
@@ -184,6 +184,7 @@ router.delete("/:id", isAuthenticated, (req, res, next) => {
         })
         .catch(err => {
             console.log("Error while deleting player: ", err);
+            next(err);
         })
 })
 
