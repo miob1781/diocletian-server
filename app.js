@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: false }))
 
 // routes
 app.use("/player", require("./routes/player.routes"))
-// app.use("/game", isAuthenticated, require("./routes/game.routes"))
+app.use("/game", isAuthenticated, require("./routes/game.routes"))
 
 // error-handling
 app.use((req, res, next) => {
