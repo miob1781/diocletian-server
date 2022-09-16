@@ -29,7 +29,7 @@ const moveSchema = new Schema({
 const gameModel = new Schema({
     status: {
         type: String,
-        enum: ["created, playing, finished"],
+        enum: ["created, finished"],
         required: true
     },
     numPlayers: {
