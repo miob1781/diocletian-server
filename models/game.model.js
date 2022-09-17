@@ -49,7 +49,8 @@ const gameModel = new Schema({
     },
     players: [{
         type: Schema.Types.ObjectId,
-        ref: "Player"
+        ref: "Player",
+        required: true
     }],
     moves: [moveSchema],
     winner: {

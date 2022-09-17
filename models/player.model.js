@@ -14,11 +14,7 @@ const playerSchema = new Schema({
     password: {
         type: String,
         required: true
-    },
-    connections: [{
-        type: Schema.Types.ObjectId,
-        ref: "Player"
-    }]
+    }
 }, { timestamps: true })
 
 // Player will be referenced in an array in: Game.
