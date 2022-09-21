@@ -50,7 +50,7 @@ router.post("/signup", (req, res, next) => {
                 })
                 .then(newPlayer => {
                     const payload = {
-                        _id: newPlayer._id,
+                        id: newPlayer._id,
                         username: newPlayer.username,
                         email: newPlayer.email
                     }
@@ -102,10 +102,9 @@ router.post("/login", (req, res, next) => {
                         return res.status(400).json({ errorMessage: "Wrong credentials." })
                     }
                     const payload = {
-                        _id: playerFromDB._id,
+                        id: playerFromDB._id,
                         username: playerFromDB.username,
                         email: playerFromDB.email,
-                        connections: playerFromDB.connections
                     }
                     const authToken = jwt.sign(
                         payload,
@@ -121,6 +120,7 @@ router.post("/login", (req, res, next) => {
 })
 
 router.get("/verify", isAuthenticated, (req, res, next) => {
+    console.log("Payload: ", req.payload);
     res.json(req.payload)
 })
 
