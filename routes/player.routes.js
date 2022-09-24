@@ -124,6 +124,22 @@ router.get("/verify", isAuthenticated, (req, res, next) => {
     res.json(req.payload)
 })
 
+router.get("/", isAuthenticated, (req, res, next) => {
+    const { username } = req.query
+    if (username) {
+        Player.findOne({ username })
+            .then(playerFromDB => {
+                res.status(200).json({ id: playerFromDB._id })
+            })
+            .catch(err => {
+                console.log("Error while loading player by username: ", err);
+                next(err)
+            })
+    } else {
+        res.status(400).json({ errorMessage: "No username has been submitted." })
+    }
+})
+
 router.put("/:id", isAuthenticated, (req, res, next) => {
     const { id } = req.params
     const { username, email, password } = req.body
