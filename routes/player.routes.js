@@ -34,19 +34,24 @@ router.post("/signup", (req, res, next) => {
     Player.findOne({ username })
         .then(playerFromDB => {
             if (playerFromDB) {
+                console.log("found user: ", playerFromDB.username);
                 return res.status(400).json({ errorMessage: "Username already taken." })
+                console.log("has not returned message!");
             }
-            if (playerFromDB.email === email) {
-                return res.status(400).json({ errorMessage: "Email  already taken." })
-            }
-            return bcrypt.genSalt(saltRounds)
-                .then(salt => bcrypt.hash(password, salt))
-                .then(hashedPassword => {
-                    return Player.create({
-                        username,
-                        email,
-                        password: hashedPassword
-                    })
+            Player.findOne({ email })
+                .then(playerFromDB => {
+                    if (playerFromDB) {
+                        return res.status(400).json({ errorMessage: "Email  already taken." })
+                    }
+                    return bcrypt.genSalt(saltRounds)
+                        .then(salt => bcrypt.hash(password, salt))
+                        .then(hashedPassword => {
+                            return Player.create({
+                                username,
+                                email,
+                                password: hashedPassword
+                            })
+                        })
                 })
                 .then(newPlayer => {
                     const payload = {
