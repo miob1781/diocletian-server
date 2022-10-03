@@ -32,15 +32,15 @@ router.get("/:id", (req, res, next) => {
 })
 
 router.post("/", (req, res, next) => {
-    const { numPlayers, size, density } = req.body
+    const { numPlayers, size, density, players } = req.body
 
-    if (!numPlayers || !size || !density) {
+    if (!numPlayers || !size || !density || !players) {
         return res.status(400).json({ errorMessage: "Please provide all required parameters." })
     }
 
-    Game.create({ status: "created", numPlayers, size, density })
-        .then(newGame => {
-            res.status(201).json({ game: newGame })
+    Game.create({ status: "created", numPlayers, size, density, players })
+        .then(createdGame => {
+            res.status(201).send({ id: createdGame._id })
         })
         .catch(err => {
             console.log("Error while creating new game: ", err);
@@ -56,10 +56,10 @@ router.put("/:id", (req, res, next) => {
         return res.status(400).json({ errorMessage: "Please provide all required parameters." })
     }
 
-    Game.findByIdAndUpdate(id, { status, numPlayers, size, density, players, moves, winner })
+    Game.findByIdAndUpdate(id, { status, numPlayers, size, density, players, moves, winner }, { new: true })
         .then(updatedGame => {
             res.status(201).json({ game: updatedGame })
-        }, { new: true })
+        })
         .catch(err => {
             console.log("Error while updating game: ", err);
             next(err);
