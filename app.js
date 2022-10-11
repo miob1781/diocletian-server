@@ -12,7 +12,7 @@ app.set("trust proxy", 1)
 
 app.use(cors({
     credentials: true,
-    origin: "http://127.0.0.1:8080" // remember to add specific origin in production
+    origin: "http://127.0.0.1:5500" // remember to add specific origin in production
 }))
 
 app.use(logger("dev"))

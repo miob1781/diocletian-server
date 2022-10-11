@@ -29,7 +29,7 @@ const moveSchema = new Schema({
 const gameModel = new Schema({
     status: {
         type: String,
-        enum: ["created, finished"],
+        enum: ["created", "finished"],
         required: true
     },
     numPlayers: {
@@ -44,7 +44,7 @@ const gameModel = new Schema({
     },
     density: {
         type: String,
-        enum: ["sparse, medium, dense"],
+        enum: ["sparse", "medium", "dense"],
         required: true
     },
     players: [{
@@ -52,6 +52,11 @@ const gameModel = new Schema({
         ref: "Player",
         required: true
     }],
+    creator: {
+        type: Schema.Types.ObjectId,
+        ref: "Player",
+        required: true
+    },
     moves: [moveSchema],
     winner: {
         type: Schema.Types.ObjectId,

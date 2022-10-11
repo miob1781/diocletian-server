@@ -22,6 +22,7 @@ router.get("/:id", (req, res, next) => {
     const { id } = req.params
 
     Game.findById(id)
+        .populate(["players", "creator", "winner"])
         .then(game => {
             res.status(200).json({ game })
         })
@@ -32,13 +33,13 @@ router.get("/:id", (req, res, next) => {
 })
 
 router.post("/", (req, res, next) => {
-    const { numPlayers, size, density, players } = req.body
+    const { numPlayers, size, density, players, creator } = req.body
 
     if (!numPlayers || !size || !density || !players) {
         return res.status(400).json({ errorMessage: "Please provide all required parameters." })
     }
 
-    Game.create({ status: "created", numPlayers, size, density, players })
+    Game.create({ status: "created", numPlayers, size, density, players, creator })
         .then(createdGame => {
             res.status(201).send({ id: createdGame._id })
         })
