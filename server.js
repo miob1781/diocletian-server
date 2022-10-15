@@ -13,10 +13,11 @@ const io = new Server(httpServer, {
     }
 })
 
+const createdGames = []
+
 io.on("connection", socket => {
     console.log("a user connected");
 
-    const createdGames = []
 
     socket.on("disconnect", () => {
         console.log("a user disconnected");
@@ -25,13 +26,13 @@ io.on("connection", socket => {
     socket.on("game created", msg => {
         const { webGameId, invitedPlayers } = msg
 
-        const playersAwaited = invitedPlayers.map(player => ({
-            playerId: player[0],
-            playerName: player[1],
+        const playersAwaited = invitedPlayers.map(playerId => ({
+            playerId,
             hasAccepted: false
         }))
         
         createdGames.push({ webGameId, playersAwaited })
+
         socket.join(webGameId)
         socket.broadcast.emit("invitation", { webGameId, invitedPlayers: playersAwaited })
     })
@@ -40,12 +41,13 @@ io.on("connection", socket => {
         const { webGameId, playerId } = msg
 
         const webGame = createdGames.find(game => game.webGameId === webGameId)
-        webGame.invitedPlayers.find(player => player.playerId === playerId).hasAccepted = true
+
+        webGame.playersAwaited.find(player => player.playerId === playerId).hasAccepted = true
 
         socket.join(webGameId)
 
-        if (!webGame.invitedPlayers.find(player => player.hasAccepted === false)) {
-            socket.to(webGameId).emit("start game")
+        if (!webGame.playersAwaited.find(player => player.hasAccepted === false)) {
+            socket.to(webGameId).emit("ready")
         }
     })
 
@@ -60,6 +62,12 @@ io.on("connection", socket => {
             .catch(err => {
                 console.log(err)
             })
+    })
+
+    socket.on("start", msg => {
+       const { game } = msg
+       
+       socket.to(webGameId).broadcast.emit("set game", { game })
     })
 
     socket.on("move", msg => {
