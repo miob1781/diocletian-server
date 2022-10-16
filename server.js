@@ -24,17 +24,17 @@ io.on("connection", socket => {
     })
 
     socket.on("game created", msg => {
-        const { webGameId, invitedPlayers } = msg
+        const { webGameId, invitedPlayersIds, webGameData } = msg
 
-        const playersAwaited = invitedPlayers.map(playerId => ({
-            playerId,
+        const invitedPlayers = invitedPlayersIds.map(id => ({
+            id,
             hasAccepted: false
         }))
         
-        createdGames.push({ webGameId, playersAwaited })
+        createdGames.push({ webGameId, invitedPlayers })
 
         socket.join(webGameId)
-        socket.broadcast.emit("invitation", { webGameId, invitedPlayers: playersAwaited })
+        socket.broadcast.emit("invitation", { webGameId, invitedPlayersIds, webGameData })
     })
 
     socket.on("accept", msg => {
@@ -42,11 +42,11 @@ io.on("connection", socket => {
 
         const webGame = createdGames.find(game => game.webGameId === webGameId)
 
-        webGame.playersAwaited.find(player => player.playerId === playerId).hasAccepted = true
-
+        webGame.invitedPlayers.find(player => player.id === playerId).hasAccepted = true
         socket.join(webGameId)
 
-        if (!webGame.playersAwaited.find(player => player.hasAccepted === false)) {
+        if (webGame.invitedPlayers.every(player => player.hasAccepted)) {
+            console.log("ready");
             socket.to(webGameId).emit("ready")
         }
     })
@@ -65,17 +65,21 @@ io.on("connection", socket => {
     })
 
     socket.on("start", msg => {
-       const { game } = msg
-       
-       socket.to(webGameId).broadcast.emit("set game", { game })
+        const { webGameId, selectedPlayersColors, fieldData } = msg
+
+        socket.to(webGameId).emit("set game", { webGameId, selectedPlayersColors, fieldData })
     })
 
     socket.on("move", msg => {
-
+        const { webGameId, move } = msg
+        
+        socket.to(webGameId).emit("move", { move })
     })
 
     socket.on("game ended", msg => {
+        const {winner, webGameId } = msg
 
+        // Game.findByIdAndUpdate(webGameId, { })
     })
 })
 
