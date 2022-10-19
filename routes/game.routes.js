@@ -49,19 +49,4 @@ router.post("/", (req, res, next) => {
         })
 })
 
-router.put("/:id", (req, res, next) => {
-    const { id } = req.params
-    const { status, winner } = req.body
-
-    Game.findByIdAndUpdate(id, { status, winner }, { new: true })
-        .then(updatedGame => {
-            res.status(201).json({ game: updatedGame })
-        })
-        .catch(err => {
-            console.log("Error while updating game: ", err);
-            next(err);
-        })
-})
-
-
 module.exports = router

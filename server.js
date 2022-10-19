@@ -30,7 +30,7 @@ io.on("connection", socket => {
             id,
             hasAccepted: false
         }))
-        
+
         createdGames.push({ webGameId, invitedPlayers })
 
         socket.join(webGameId)
@@ -51,11 +51,11 @@ io.on("connection", socket => {
     })
 
     socket.on("decline", msg => {
-        const { webGameId } = msg
+        const { webGameId, playerName } = msg
 
         Game.findByIdAndDelete(webGameId)
             .then(() => {
-                socket.to(webGameId).emit("game declined", { webGameId })
+                socket.to(webGameId).emit("game declined", { webGameId, playerName })
                 createdGames.filter(game => game.webGameId !== webGameId)
             })
             .catch(err => {
@@ -66,18 +66,21 @@ io.on("connection", socket => {
     socket.on("start", msg => {
         const { webGameId, selectedPlayersColors, fieldData } = msg
 
-        socket.broadcast.to(webGameId).emit("set game", { webGameId, selectedPlayersColors, fieldData })
+        socket.to(webGameId).emit("set game", { selectedPlayersColors, fieldData })
     })
 
     socket.on("move", msg => {
         const { webGameId, move } = msg
-        socket.broadcast.to(webGameId).emit("move", { move })
+        socket.to(webGameId).emit("move", { move })
     })
 
     socket.on("game ended", msg => {
-        const {winner, webGameId } = msg
+        const { winner, webGameId } = msg
 
-        // Game.findByIdAndUpdate(webGameId, { })
+        Game.findByIdAndUpdate(webGameId, { status: "finished", winner })
+            .catch(err => {
+                console.log("Error while updating game: ", err);
+            })
     })
 })
 
