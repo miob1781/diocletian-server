@@ -55,7 +55,7 @@ io.on("connection", socket => {
 
         Game.findByIdAndDelete(webGameId)
             .then(() => {
-                socket.broadcast.emit("game declined", { webGameId })
+                socket.to(webGameId).emit("game declined", { webGameId })
                 createdGames.filter(game => game.webGameId !== webGameId)
             })
             .catch(err => {
