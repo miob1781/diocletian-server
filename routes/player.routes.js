@@ -10,14 +10,10 @@ const regex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
 const Player = require("../models/player.model")
 
 router.post("/signup", (req, res, next) => {
-    const { username, email, password } = req.body
+    const { username, password } = req.body
 
     if (!username) {
         return res.status(400).json({ errorMessage: "Please provide your username." });
-    }
-
-    if (!email) {
-        return res.status(400).json({ errorMessage: "Please provide your email." });
     }
 
     if (!password) {
@@ -34,47 +30,37 @@ router.post("/signup", (req, res, next) => {
     Player.findOne({ username })
         .then(playerFromDB => {
             if (playerFromDB) {
-                console.log("found user: ", playerFromDB.username);
                 return res.status(400).json({ errorMessage: "Username already taken." })
-                console.log("has not returned message!");
             }
-            Player.findOne({ email })
-                .then(playerFromDB => {
-                    if (playerFromDB) {
-                        return res.status(400).json({ errorMessage: "Email  already taken." })
-                    }
-                    return bcrypt.genSalt(saltRounds)
-                        .then(salt => bcrypt.hash(password, salt))
-                        .then(hashedPassword => {
-                            return Player.create({
-                                username,
-                                email,
-                                password: hashedPassword
-                            })
-                        })
+            return bcrypt.genSalt(saltRounds)
+                .then(salt => bcrypt.hash(password, salt))
+                .then(hashedPassword => {
+                    return Player.create({
+                        username,
+                        password: hashedPassword
+                    })
                 })
-                .then(newPlayer => {
-                    const payload = {
-                        id: newPlayer._id,
-                        username: newPlayer.username,
-                        email: newPlayer.email
-                    }
-                    const authToken = jwt.sign(
-                        payload,
-                        process.env.TOKEN_SECRET,
-                        { algorithm: "HS256", expiresIn: "6h" }
-                    )
-                    return res.status(200).json({ authToken })
-                })
-                .catch(err => {
-                    if (err instanceof mongoose.Error.ValidationError) {
-                        return res.status(400).json({ errorMessage: err.message })
-                    }
-                    if (err.code === 11000) {
-                        return res.status(400).json({ errorMessage: "Username must be unique." })
-                    }
-                    return res.status(500).json({ errorMessage: err.message })
-                })
+        })
+        .then(newPlayer => {
+            const payload = {
+                id: newPlayer._id,
+                username: newPlayer.username
+            }
+            const authToken = jwt.sign(
+                payload,
+                process.env.TOKEN_SECRET,
+                { algorithm: "HS256", expiresIn: "6h" }
+            )
+            return res.status(200).json({ authToken })
+        })
+        .catch(err => {
+            if (err instanceof mongoose.Error.ValidationError) {
+                return res.status(400).json({ errorMessage: err.message })
+            }
+            if (err.code === 11000) {
+                return res.status(400).json({ errorMessage: "Username must be unique." })
+            }
+            return res.status(500).json({ errorMessage: err.message })
         })
 })
 
@@ -108,8 +94,7 @@ router.post("/login", (req, res, next) => {
                     }
                     const payload = {
                         id: playerFromDB._id,
-                        username: playerFromDB.username,
-                        email: playerFromDB.email,
+                        username: playerFromDB.username
                     }
                     const authToken = jwt.sign(
                         payload,
@@ -146,14 +131,10 @@ router.get("/", isAuthenticated, (req, res, next) => {
 
 router.put("/:id", isAuthenticated, (req, res, next) => {
     const { id } = req.params
-    const { username, email, password } = req.body
+    const { username, password } = req.body
 
     if (!username) {
         return res.status(400).json({ errorMessage: "Please provide your username." });
-    }
-
-    if (!email) {
-        return res.status(400).json({ errorMessage: "Please provide your email." });
     }
 
     if (!password) {
@@ -172,7 +153,6 @@ router.put("/:id", isAuthenticated, (req, res, next) => {
         .then(hashedPassword => {
             return Player.findByIdAndUpdate(id, {
                 username,
-                email,
                 password: hashedPassword
             }, { new: true })
         })
@@ -180,7 +160,6 @@ router.put("/:id", isAuthenticated, (req, res, next) => {
             const playerData = {
                 _id: newPlayer._id,
                 username: newPlayer.username,
-                email: newPlayer.email,
                 connections: newPlayer.connections
             }
             return res.status(200).json({ playerData })

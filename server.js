@@ -46,7 +46,6 @@ io.on("connection", socket => {
         socket.join(webGameId)
 
         if (webGame.invitedPlayers.every(player => player.hasAccepted)) {
-            console.log("ready");
             socket.to(webGameId).emit("ready")
         }
     })
@@ -67,13 +66,12 @@ io.on("connection", socket => {
     socket.on("start", msg => {
         const { webGameId, selectedPlayersColors, fieldData } = msg
 
-        socket.to(webGameId).emit("set game", { webGameId, selectedPlayersColors, fieldData })
+        socket.broadcast.to(webGameId).emit("set game", { webGameId, selectedPlayersColors, fieldData })
     })
 
     socket.on("move", msg => {
         const { webGameId, move } = msg
-        
-        socket.to(webGameId).emit("move", { move })
+        socket.broadcast.to(webGameId).emit("move", { move })
     })
 
     socket.on("game ended", msg => {
