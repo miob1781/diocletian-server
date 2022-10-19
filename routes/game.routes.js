@@ -51,13 +51,9 @@ router.post("/", (req, res, next) => {
 
 router.put("/:id", (req, res, next) => {
     const { id } = req.params
-    const { status, numPlayers, size, density, players,  moves, winner } = req.body
+    const { status, winner } = req.body
 
-    if (!status || !numPlayers || !size || !density) {
-        return res.status(400).json({ errorMessage: "Please provide all required parameters." })
-    }
-
-    Game.findByIdAndUpdate(id, { status, numPlayers, size, density, players, moves, winner }, { new: true })
+    Game.findByIdAndUpdate(id, { status, winner }, { new: true })
         .then(updatedGame => {
             res.status(201).json({ game: updatedGame })
         })
