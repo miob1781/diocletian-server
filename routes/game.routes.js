@@ -63,4 +63,17 @@ router.put("/:id", (req, res, next) => {
         })
 })
 
+router.delete("/:id", (req, res, next) => {
+    const { id } = req.params
+
+    Game.findByIdAndRemove(id)
+        .then(() => {
+            res.status(204).send()
+        })
+        .catch(err => {
+            console.log("Error while deleting game: ", err);
+            next(err);
+        })
+})
+
 module.exports = router
