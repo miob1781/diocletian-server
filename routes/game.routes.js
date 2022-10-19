@@ -1,9 +1,10 @@
 const router = require("express").Router()
 const Game = require("../models/game.model")
+const Player = require("../models/player.model")
 
 router.get("/player/:playerId", (req, res, next) => {
     const { playerId } = req.params
-    
+
     Game.find({
         players: {
             $in: playerId
@@ -47,6 +48,35 @@ router.post("/", (req, res, next) => {
             console.log("Error while creating new game: ", err);
             next(err);
         })
+})
+
+router.put("/:id", (req, res, next) => {
+    const { id } = req.params
+    const { winner } = req.body
+
+    if (winner !== "computer") {
+        Player.findOne({ username: winner })
+            .then(playerFromDB => {
+                const winnerId = playerFromDB._id
+                return Game.findByIdAndUpdate(id, { status: "finished", winner: winnerId })
+            })
+            .then(() => {
+                res.status(204).send()
+            })
+            .catch(err => {
+                console.log("error while loading winnerId: ", err)
+                next(err)
+            })
+    } else {
+        Game.findByIdAndUpdate(id, { status: "finished" })
+            .then(() => {
+                res.status(204).send()
+            })
+            .catch(err => {
+                console.log("Error while updating game: ", err)
+                next(err)
+            })
+    }
 })
 
 module.exports = router

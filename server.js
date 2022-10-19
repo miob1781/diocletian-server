@@ -73,15 +73,6 @@ io.on("connection", socket => {
         const { webGameId, move } = msg
         socket.to(webGameId).emit("move", { move })
     })
-
-    socket.on("game ended", msg => {
-        const { winner, webGameId } = msg
-
-        Game.findByIdAndUpdate(webGameId, { status: "finished", winner })
-            .catch(err => {
-                console.log("Error while updating game: ", err);
-            })
-    })
 })
 
 const PORT = process.env.PORT
