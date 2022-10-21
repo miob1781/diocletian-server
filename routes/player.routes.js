@@ -51,7 +51,7 @@ router.post("/signup", (req, res, next) => {
                 process.env.TOKEN_SECRET,
                 { algorithm: "HS256", expiresIn: "6h" }
             )
-            return res.status(200).json({ authToken })
+            return res.json({ authToken })
         })
         .catch(err => {
             if (err instanceof mongoose.Error.ValidationError) {
@@ -101,7 +101,7 @@ router.post("/login", (req, res, next) => {
                         process.env.TOKEN_SECRET,
                         { algorithm: "HS256", expiresIn: "6h" }
                     )
-                    return res.status(200).json({ authToken })
+                    return res.json({ authToken })
                 })
         })
         .catch(err => {
@@ -118,7 +118,7 @@ router.get("/", isAuthenticated, (req, res, next) => {
     if (username) {
         Player.findOne({ username })
             .then(playerFromDB => {
-                res.status(200).json({ id: playerFromDB._id })
+                res.json({ id: playerFromDB._id })
             })
             .catch(err => {
                 console.log("Error while loading player by username: ", err);

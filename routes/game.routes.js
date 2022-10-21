@@ -72,7 +72,7 @@ router.get("/:id", (req, res, next) => {
     Game.findById(id)
         .populate(["players", "creator", "winner"])
         .then(game => {
-            res.status(200).json({ game })
+            res.json({ game })
         })
         .catch(err => {
             console.log("Error while loading game: ", err);
