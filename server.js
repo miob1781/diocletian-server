@@ -1,5 +1,4 @@
 const app = require("./app")
-const Game = require("./models/game.model")
 
 const { createServer } = require("http")
 const { Server } = require("socket.io")
@@ -30,7 +29,6 @@ io.on("connection", socket => {
             id,
             hasAccepted: false
         }))
-
         createdGames.push({ webGameId, invitedPlayers })
 
         socket.join(webGameId)
@@ -52,15 +50,17 @@ io.on("connection", socket => {
 
     socket.on("decline", msg => {
         const { webGameId, playerName } = msg
+        
+        socket.to(webGameId).emit("game declined", { webGameId, playerName })
+        createdGames.filter(game => game.webGameId !== webGameId)
+    })
 
-        Game.findByIdAndDelete(webGameId)
-            .then(() => {
-                socket.to(webGameId).emit("game declined", { webGameId, playerName })
-                createdGames.filter(game => game.webGameId !== webGameId)
-            })
-            .catch(err => {
-                console.log(err)
-            })
+    socket.on("revoke", msg => {
+        const { webGameId } = msg
+
+        socket.broadcast.emit("invitation revoked", { webGameId })
+        createdGames.filter(game => game.webGameId !== webGameId)
+
     })
 
     socket.on("start", msg => {

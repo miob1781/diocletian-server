@@ -64,7 +64,7 @@ router.put("/:id", (req, res, next) => {
                 res.status(204).send()
             })
             .catch(err => {
-                console.log("error while loading winnerId: ", err)
+                console.log("error: ", err)
                 next(err)
             })
     } else {
@@ -77,6 +77,19 @@ router.put("/:id", (req, res, next) => {
                 next(err)
             })
     }
+})
+
+router.delete("/:id", (req, res, next) => {
+    const { id } = req.params
+
+    Game.findByIdAndDelete(id)
+    .then(() => {
+        res.status(204).send()
+    })
+    .catch(err => {
+        console.log(err)
+        next(err)
+    })
 })
 
 module.exports = router
