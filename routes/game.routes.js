@@ -2,16 +2,63 @@ const router = require("express").Router()
 const Game = require("../models/game.model")
 const Player = require("../models/player.model")
 
-router.get("/player/:playerId", (req, res, next) => {
-    const { playerId } = req.params
+router.get("/", (req, res, next) => {
+    const { playerId } = req.query
 
     Game.find({
         players: {
             $in: playerId
         }
     })
+        .populate(["creator", "players"])
         .then(games => {
-            res.status(200).json({ games })
+            const players = []
+            const gamesCreated = []
+            let numGamesFinished = 0
+            let numGamesWon = 0
+
+            games.forEach(game => {
+                if (game.status === "created") {
+                    const playersData = game.players.map(player => {
+                        return {
+                            id: player._id,
+                            name: player.username
+                        }
+                    })
+
+                    const creatorData = {
+                        id: game.creator._id,
+                        name: game.creator.username
+                    }
+
+                    gamesCreated.push({
+                        id: game._id,
+                        numPlayers: game.numPlayers,
+                        size: game.size,
+                        density: game.density,
+                        players: playersData,
+                        creator: creatorData
+                    })
+
+                } else if (game.status === "finished") {
+                    numGamesFinished++
+
+                    if (game.winner === playerId) {
+                        numGamesWon++
+                    }
+
+                    game.players.forEach(player => {
+                        if (player._id !== playerId && players.includes(player._id)) {
+                            players.push({
+                                id: player._id,
+                                name: player.username
+                            })
+                        }
+                    })
+                }
+            })
+
+            res.send({ players, gamesCreated, numGamesFinished, numGamesWon })
         })
         .catch(err => {
             console.log("Error while loading games: ", err);
@@ -83,13 +130,13 @@ router.delete("/:id", (req, res, next) => {
     const { id } = req.params
 
     Game.findByIdAndDelete(id)
-    .then(() => {
-        res.status(204).send()
-    })
-    .catch(err => {
-        console.log(err)
-        next(err)
-    })
+        .then(() => {
+            res.status(204).send()
+        })
+        .catch(err => {
+            console.log(err)
+            next(err)
+        })
 })
 
 module.exports = router
