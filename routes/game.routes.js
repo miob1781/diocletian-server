@@ -43,7 +43,7 @@ router.get("/", (req, res, next) => {
                 } else if (game.status === "finished") {
                     numGamesFinished++
 
-                    if (game.winner === playerId) {
+                    if (game.winner?.toString() === playerId) {
                         numGamesWon++
                     }
 
@@ -100,12 +100,13 @@ router.post("/", (req, res, next) => {
 router.put("/:id", (req, res, next) => {
     const { id } = req.params
     const { winner } = req.body
+    const status = winner ? "finished" : "playing"
 
-    if (winner !== "computer") {
+    if (winner && winner !== "computer") {
         Player.findOne({ username: winner })
             .then(playerFromDB => {
                 const winnerId = playerFromDB._id
-                return Game.findByIdAndUpdate(id, { status: "finished", winner: winnerId })
+                return Game.findByIdAndUpdate(id, { status, winner: winnerId })
             })
             .then(() => {
                 res.status(204).send()
@@ -114,8 +115,9 @@ router.put("/:id", (req, res, next) => {
                 console.log("error: ", err)
                 next(err)
             })
+
     } else {
-        Game.findByIdAndUpdate(id, { status: "finished" })
+        Game.findByIdAndUpdate(id, { status })
             .then(() => {
                 res.status(204).send()
             })

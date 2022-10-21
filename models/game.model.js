@@ -3,7 +3,7 @@ const { Schema, model } = require("mongoose")
 const gameModel = new Schema({
     status: {
         type: String,
-        enum: ["created", "finished"],
+        enum: ["created", "playing", "finished"],
         required: true
     },
     numPlayers: {
