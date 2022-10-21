@@ -1,4 +1,5 @@
 const app = require("./app")
+const Game = require("./models/game.model")
 
 const { createServer } = require("http")
 const { Server } = require("socket.io")
@@ -12,24 +13,21 @@ const io = new Server(httpServer, {
     }
 })
 
-const createdGames = []
-
 io.on("connection", socket => {
     console.log("a user connected");
-
 
     socket.on("disconnect", () => {
         console.log("a user disconnected");
     })
 
+    socket.on("join room", msg => {
+        const { webGameId } = msg
+
+        socket.join(webGameId)
+    })
+
     socket.on("game created", msg => {
         const { webGameId, invitedPlayersIds, webGameData } = msg
-
-        const invitedPlayers = invitedPlayersIds.map(id => ({
-            id,
-            hasAccepted: false
-        }))
-        createdGames.push({ webGameId, invitedPlayers })
 
         socket.join(webGameId)
         socket.broadcast.emit("invitation", { webGameId, invitedPlayersIds, webGameData })
@@ -37,30 +35,30 @@ io.on("connection", socket => {
 
     socket.on("accept", msg => {
         const { webGameId, playerId } = msg
-
-        const webGame = createdGames.find(game => game.webGameId === webGameId)
-
-        webGame.invitedPlayers.find(player => player.id === playerId).hasAccepted = true
-        socket.join(webGameId)
-
-        if (webGame.invitedPlayers.every(player => player.hasAccepted)) {
-            socket.to(webGameId).emit("ready")
-        }
+        
+        Game.findByIdAndUpdate(webGameId, {
+            $addToSet: {
+                playersHavingAccepted: playerId
+            }
+        }, { new: true })
+            .then(updatedGame => {
+                if (updatedGame.playersHavingAccepted.every(player => updatedGame.players.includes(player))) {
+                    socket.to(webGameId).emit("ready")
+                }
+            })
+            .catch(err => console.log("Error while pushing player to array in DB: ", err))
     })
 
     socket.on("decline", msg => {
         const { webGameId, playerName } = msg
         
         socket.to(webGameId).emit("game declined", { webGameId, playerName })
-        createdGames.filter(game => game.webGameId !== webGameId)
     })
 
     socket.on("revoke", msg => {
         const { webGameId } = msg
 
         socket.broadcast.emit("invitation revoked", { webGameId })
-        createdGames.filter(game => game.webGameId !== webGameId)
-
     })
 
     socket.on("start", msg => {

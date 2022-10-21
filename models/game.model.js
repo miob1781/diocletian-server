@@ -31,6 +31,10 @@ const gameModel = new Schema({
         ref: "Player",
         required: true
     },
+    playersHavingAccepted: [{
+        type: Schema.Types.ObjectId,
+        ref: "Player"
+    }],
     winner: {
         type: Schema.Types.ObjectId,
         ref: "Player"
