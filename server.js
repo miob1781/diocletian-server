@@ -20,17 +20,23 @@ io.on("connection", socket => {
         console.log("a user disconnected");
     })
 
-    socket.on("join room", msg => {
-        const { webGameId } = msg
+    socket.on("register", msg => {
+        const { playerId } = msg
 
-        socket.join(webGameId)
+        socket.join(playerId)
     })
 
     socket.on("game created", msg => {
         const { webGameId, invitedPlayersIds, webGameData } = msg
+        
+        socket.join(webGameId)
+        invitedPlayersIds.forEach(id => socket.to(id).emit("invitation", { webGameId, webGameData }))
+    })
+    
+    socket.on("join room", msg => {
+        const { webGameId } = msg
 
         socket.join(webGameId)
-        socket.broadcast.emit("invitation", { webGameId, invitedPlayersIds, webGameData })
     })
 
     socket.on("accept", msg => {
@@ -58,7 +64,7 @@ io.on("connection", socket => {
     socket.on("revoke", msg => {
         const { webGameId } = msg
 
-        socket.broadcast.emit("invitation revoked", { webGameId })
+        socket.to(webGameId).emit("invitation revoked")
     })
 
     socket.on("start", msg => {
