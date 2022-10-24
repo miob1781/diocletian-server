@@ -12,7 +12,7 @@ router.get("/", (req, res, next) => {
     })
         .populate(["creator", "players"])
         .then(games => {
-            const players = []
+            const connectedPlayers = []
             const gamesCreated = []
             let numGamesFinished = 0
             let numGamesWon = 0
@@ -48,9 +48,9 @@ router.get("/", (req, res, next) => {
                     }
 
                     game.players.forEach(player => {
-                        if (player._id !== playerId && players.includes(player._id)) {
-                            players.push({
-                                id: player._id,
+                        if (player._id.toString() !== playerId && !connectedPlayers.map(p => p.id).includes(player._id.toString())) {
+                            connectedPlayers.push({
+                                id: player._id.toString(),
                                 name: player.username
                             })
                         }
@@ -58,7 +58,7 @@ router.get("/", (req, res, next) => {
                 }
             })
 
-            res.send({ players, gamesCreated, numGamesFinished, numGamesWon })
+            res.send({ connectedPlayers, gamesCreated, numGamesFinished, numGamesWon })
         })
         .catch(err => {
             console.log("Error while loading games: ", err);
