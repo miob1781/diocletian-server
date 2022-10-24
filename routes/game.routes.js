@@ -83,8 +83,24 @@ router.get("/:id", (req, res, next) => {
 router.post("/", (req, res, next) => {
     const { numPlayers, size, density, players, creator } = req.body
 
+    // checks for required parameters
     if (!numPlayers || !size || !density || !players) {
         return res.status(400).json({ errorMessage: "Please provide all required parameters." })
+    }
+
+    // checks that the creator participates in the game
+    if (players.length < 2 || !players.includes(creator)) {
+        return res.status(400).json({ errorMessage: "You must invite a player." })
+    }
+
+    // checks that not too many players are invited
+    if (players.length > numPlayers) {
+        return res.status(400).json({ errorMessage: "You have invited too many players." })
+    }
+
+    // checks for duplicate players
+    if (players.some((el, index) => players.slice(0, index).includes(el))) {   
+        return res.status(400).json({ errorMessage: "You can invite every player only once." })
     }
 
     Game.create({ status: "created", numPlayers, size, density, players, creator })
