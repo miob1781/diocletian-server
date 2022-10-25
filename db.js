@@ -1,6 +1,7 @@
 const mongoose = require("mongoose")
 const MONGODB_URI = process.env.MONGODB_URI
 
+// connects server to DB
 mongoose.connect(MONGODB_URI)
     .then(x => {
         console.log("Connected to MongoDB! Database name: ", x.connections[0].name);

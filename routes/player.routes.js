@@ -3,23 +3,29 @@ const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
 const mongoose = require("mongoose")
 const isAuthenticated = require("../middleware/jwt.middleware")
-
-const saltRounds = 10
-const regex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
-
 const Player = require("../models/player.model")
 
+// number of salt rounds used for encryption
+const saltRounds = 10
+
+// regex pattern used for password
+const regex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/;
+
+// signs up a new player
 router.post("/signup", (req, res, next) => {
     const { username, password } = req.body
 
+    // checks if username is provided
     if (!username) {
         return res.status(400).json({ errorMessage: "Please provide your username." });
     }
 
+    // checks if password is provided
     if (!password) {
         return res.status(400).json({ errorMessage: "Please provide your password." });
     }
 
+    // checks if password matches regex
     if (!regex.test(password)) {
         return res.status(400).json({
             errorMessage:
@@ -29,9 +35,13 @@ router.post("/signup", (req, res, next) => {
 
     Player.findOne({ username })
         .then(playerFromDB => {
+
+            // checks if username already exists
             if (playerFromDB) {
                 return res.status(400).json({ errorMessage: "Username already taken." })
             }
+
+            // generates password and creates player id
             return bcrypt.genSalt(saltRounds)
                 .then(salt => bcrypt.hash(password, salt))
                 .then(hashedPassword => {
@@ -42,17 +52,22 @@ router.post("/signup", (req, res, next) => {
                 })
         })
         .then(newPlayer => {
+
+            // creates auth token
             const payload = {
                 id: newPlayer._id,
                 username: newPlayer.username
             }
+
             const authToken = jwt.sign(
                 payload,
                 process.env.TOKEN_SECRET,
                 { algorithm: "HS256", expiresIn: "6h" }
             )
+
             return res.json({ authToken })
         })
+
         .catch(err => {
             if (err instanceof mongoose.Error.ValidationError) {
                 return res.status(400).json({ errorMessage: err.message })
@@ -64,17 +79,21 @@ router.post("/signup", (req, res, next) => {
         })
 })
 
+// logs a user in
 router.post("/login", (req, res, next) => {
     const { username, password } = req.body
 
+    // checks if username is provided
     if (!username) {
         return res.status(400).json({ errorMessage: "Please provide your username." });
     }
 
+    // checks if password is provided
     if (!password) {
         return res.status(400).json({ errorMessage: "Please provide your password." });
     }
 
+    // checks if password matches regex
     if (!regex.test(password)) {
         return res.status(400).json({
             errorMessage:
@@ -84,23 +103,33 @@ router.post("/login", (req, res, next) => {
 
     Player.findOne({ username })
         .then(playerFromDB => {
+
+            // if no player is returned, the username does not exist
             if (!playerFromDB) {
                 return res.status(400).json({ errorMessage: "Wrong credentials." })
             }
+
+            // hashes and compares password
             bcrypt.compare(password, playerFromDB.password)
                 .then(isSamePassword => {
+
+                    // checks if password is correct
                     if (!isSamePassword) {
                         return res.status(400).json({ errorMessage: "Wrong credentials." })
                     }
+
+                    // creates auth token
                     const payload = {
                         id: playerFromDB._id,
                         username: playerFromDB.username
                     }
+
                     const authToken = jwt.sign(
                         payload,
                         process.env.TOKEN_SECRET,
                         { algorithm: "HS256", expiresIn: "6h" }
                     )
+
                     return res.json({ authToken })
                 })
         })
@@ -109,12 +138,15 @@ router.post("/login", (req, res, next) => {
         })
 })
 
+// verifies auth token and sends the payload
 router.get("/verify", isAuthenticated, (req, res, next) => {
     res.json(req.payload)
 })
 
+// gets a player to invite by id and sends the id
 router.get("/", isAuthenticated, (req, res, next) => {
     const { username } = req.query
+
     if (username) {
         Player.findOne({ username })
             .then(playerFromDB => {
@@ -124,6 +156,7 @@ router.get("/", isAuthenticated, (req, res, next) => {
                 console.log("Error while loading player by username: ", err);
                 next(err)
             })
+            
     } else {
         res.status(400).json({ errorMessage: "No username has been submitted." })
     }

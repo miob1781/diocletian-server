@@ -2,14 +2,11 @@ const router = require("express").Router()
 const Game = require("../models/game.model")
 const Player = require("../models/player.model")
 
+// gets games that have not started yet and specific game data for games of a user by playerId
 router.get("/", (req, res, next) => {
     const { playerId } = req.query
 
-    Game.find({
-        players: {
-            $in: playerId
-        }
-    })
+    Game.find({ players: { $in: playerId } })
         .populate(["creator", "players"])
         .then(games => {
             const connectedPlayers = []
@@ -18,6 +15,8 @@ router.get("/", (req, res, next) => {
             let numGamesWon = 0
 
             games.forEach(game => {
+
+                // gets all games of the user with the status "created"
                 if (game.status === "created") {
                     const playersData = game.players.map(player => {
                         return {
@@ -40,6 +39,7 @@ router.get("/", (req, res, next) => {
                         creator: creatorData
                     })
 
+                // gets the players the user used to play with, the number of finished games, and the number of games won
                 } else if (game.status === "finished") {
                     numGamesFinished++
 
@@ -48,7 +48,10 @@ router.get("/", (req, res, next) => {
                     }
 
                     game.players.forEach(player => {
-                        if (player._id.toString() !== playerId && !connectedPlayers.map(p => p.id).includes(player._id.toString())) {
+                        if (
+                            player._id.toString() !== playerId &&
+                            !connectedPlayers.map(p => p.id).includes(player._id.toString())
+                        ) {
                             connectedPlayers.push({
                                 id: player._id.toString(),
                                 name: player.username
@@ -66,6 +69,7 @@ router.get("/", (req, res, next) => {
         })
 })
 
+// gets a specific game by id
 router.get("/:id", (req, res, next) => {
     const { id } = req.params
 
@@ -80,6 +84,7 @@ router.get("/:id", (req, res, next) => {
         })
 })
 
+// creates a new web game
 router.post("/", (req, res, next) => {
     const { numPlayers, size, density, players, creator } = req.body
 
@@ -99,7 +104,7 @@ router.post("/", (req, res, next) => {
     }
 
     // checks for duplicate players
-    if (players.some((el, index) => players.slice(0, index).includes(el))) {   
+    if (players.some((el, index) => players.slice(0, index).includes(el))) {
         return res.status(400).json({ errorMessage: "You can invite every player only once." })
     }
 
@@ -113,6 +118,7 @@ router.post("/", (req, res, next) => {
         })
 })
 
+// updates status and winner of a web game
 router.put("/:id", (req, res, next) => {
     const { id } = req.params
     const { winner } = req.body
@@ -144,6 +150,7 @@ router.put("/:id", (req, res, next) => {
     }
 })
 
+// deletes a web game when an invited rejects or the creator revokes the invitation
 router.delete("/:id", (req, res, next) => {
     const { id } = req.params
 

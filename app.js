@@ -2,8 +2,6 @@ require("dotenv/config")
 require("./db")
 const logger = require("morgan")
 const cors = require("cors")
-const isAuthenticated = require("./middleware/jwt.middleware")
-
 const express = require("express")
 const app = express()
 
@@ -25,11 +23,13 @@ app.use("/game", require("./routes/game.routes"))
 
 // error-handling
 app.use((req, res, next) => {
+
     // this middleware runs whenever requested page is not available
     res.status(404).json({ errorMessage: "This route is not available." });
 });
 
 app.use((err, req, res, next) => {
+    
     // whenever you call next(err), this middleware will handle the error
     // always logs the error
     console.error("ERROR", req.method, req.path, err);
