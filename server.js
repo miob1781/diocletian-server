@@ -9,7 +9,7 @@ const io = new Server(httpServer, {
     serveClient: false,
     cors: {
         credentials: true,
-        origin: "http://127.0.0.1:5500" // remember to add specific origin in production
+        origin: process.env.ORIGIN
     }
 })
 

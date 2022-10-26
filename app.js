@@ -11,7 +11,7 @@ app.set("trust proxy", 1)
 
 app.use(cors({
     credentials: true,
-    origin: "http://127.0.0.1:5500" // remember to add specific origin in production
+    origin: process.env.ORIGIN
 }))
 
 app.use(logger("dev"))
@@ -23,16 +23,15 @@ app.use("/player", require("./routes/player.routes"))
 app.use("/game", isAuthenticated, require("./routes/game.routes"))
 
 // error-handling
-app.use((req, res, next) => {
+app.use((req, res) => {
 
     // this middleware runs whenever requested page is not available
     res.status(404).json({ errorMessage: "This route is not available." });
 });
 
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
     
     // whenever you call next(err), this middleware will handle the error
-    // always logs the error
     console.error("ERROR", req.method, req.path, err);
 
     // if a token is not valid, send a 401 error
