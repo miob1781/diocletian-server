@@ -4,6 +4,7 @@ const logger = require("morgan")
 const cors = require("cors")
 const express = require("express")
 const app = express()
+const isAuthenticated = require("./middleware/jwt.middleware")
 
 // configuration
 app.set("trust proxy", 1)
@@ -19,7 +20,7 @@ app.use(express.urlencoded({ extended: false }))
 
 // routes
 app.use("/player", require("./routes/player.routes"))
-app.use("/game", require("./routes/game.routes"))
+app.use("/game", isAuthenticated, require("./routes/game.routes"))
 
 // error-handling
 app.use((req, res, next) => {
