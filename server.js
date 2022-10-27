@@ -13,6 +13,9 @@ const io = new Server(httpServer, {
     }
 })
 
+// array with games currently played
+const currentGames = []
+
 // starts a connection to sockets
 io.on("connection", socket => {
 
@@ -64,9 +67,17 @@ io.on("connection", socket => {
         socket.to(webGameId).emit("invitation revoked")
     })
 
-    // sends the initial values of the board to invited players
+    // sends the initial values of the board to invited players and adds new game to current games
     socket.on("start", msg => {
         const { webGameId, selectedPlayersColors, fieldData } = msg
+
+        const newGame = {
+            id: webGameId,
+            moves: []
+        }
+
+        currentGames.push(newGame)
+
         socket.to(webGameId).emit("set game", { selectedPlayersColors, fieldData })
     })
 
@@ -74,6 +85,22 @@ io.on("connection", socket => {
     socket.on("move", msg => {
         const { webGameId, move } = msg
         socket.to(webGameId).emit("move", { move })
+    })
+
+    // sends missing moves in case a connection has been broken
+    socket.on("request missing moves", msg => {
+        const { webGameId, playerId, lastMoveNum } = msg
+
+        const game = currentGames.find(game => game.id === webGameId)
+        const missingMoves = game.moves.filter(move => move.moveNum > lastMoveNum)
+
+        socket.to(playerId).emit("send missing moves", { missingMoves })
+    })
+
+    // removes game from current games when game has ended
+    socket.on("end", msg => {
+        const { webGameId } = msg
+        currentGames.filter(game => game.id !== webGameId)
     })
 })
 

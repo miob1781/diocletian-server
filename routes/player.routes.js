@@ -143,7 +143,7 @@ router.get("/verify", isAuthenticated, (req, res, next) => {
     res.json(req.payload)
 })
 
-// gets a player to invite by id and sends the id
+// gets a player to invite by username and sends the id
 router.get("/", isAuthenticated, (req, res, next) => {
     const { username } = req.query
 
