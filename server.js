@@ -14,7 +14,7 @@ const io = new Server(httpServer, {
 })
 
 // array with games currently played
-const currentGames = []
+let currentGames = []
 
 // starts a connection to sockets
 io.on("connection", socket => {
@@ -100,7 +100,7 @@ io.on("connection", socket => {
     // removes game from current games when game has ended
     socket.on("end", msg => {
         const { webGameId } = msg
-        currentGames.filter(game => game.id !== webGameId)
+        currentGames = currentGames.filter(game => game.id !== webGameId)
     })
 })
 
