@@ -18,6 +18,9 @@ let currentGames = []
 
 // starts a connection to sockets
 io.on("connection", socket => {
+    console.log("a user connected");
+
+    socket.on("disconnect", () => console.log("a user disconnected"))
 
     // adds a player to an individual room to register them by their id
     socket.on("register", msg => {
@@ -88,7 +91,11 @@ io.on("connection", socket => {
     socket.on("move", msg => {
         const { webGameId, move } = msg
 
+        console.log("move");
         console.log("move: ", move);
+
+        const game = currentGames.find(game => game.id === webGameId)
+        game.moves.push(move)
 
         socket.to(webGameId).emit("move", { move })
     })
@@ -97,6 +104,7 @@ io.on("connection", socket => {
     socket.on("request missing moves", msg => {
         const { webGameId, playerId, lastMoveNum } = msg
 
+        console.log("request missing moves");
         console.log("playerId: ", playerId);
         console.log("lastMoveNum: ", lastMoveNum);
         console.log("currentGames: ", currentGames);
