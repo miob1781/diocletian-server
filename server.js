@@ -78,12 +78,18 @@ io.on("connection", socket => {
 
         currentGames.push(newGame)
 
+        console.log("newGame on start: ", newGame);
+        console.log("currentGames on start: ", newGame);
+
         socket.to(webGameId).emit("set game", { selectedPlayersColors, fieldData })
     })
 
     // sends the field id of a move to all players
     socket.on("move", msg => {
         const { webGameId, move } = msg
+
+        console.log("move: ", move);
+
         socket.to(webGameId).emit("move", { move })
     })
 
@@ -91,8 +97,15 @@ io.on("connection", socket => {
     socket.on("request missing moves", msg => {
         const { webGameId, playerId, lastMoveNum } = msg
 
+        console.log("playerId: ", playerId);
+        console.log("lastMoveNum: ", lastMoveNum);
+        console.log("currentGames: ", currentGames);
+
         const game = currentGames.find(game => game.id === webGameId)
         const missingMoves = game.moves.filter(move => move.moveNum > lastMoveNum)
+
+        console.log("game: ", game);
+        console.log("missingMoves: ", missingMoves);
 
         socket.to(playerId).emit("send missing moves", { missingMoves })
     })
@@ -101,6 +114,8 @@ io.on("connection", socket => {
     socket.on("end", msg => {
         const { webGameId } = msg
         currentGames = currentGames.filter(game => game.id !== webGameId)
+
+        console.log("currentGames on end: ", currentGames);
     })
 })
 
