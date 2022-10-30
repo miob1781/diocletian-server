@@ -82,8 +82,7 @@ io.on("connection", socket => {
         }
 
         
-        console.log("newGame on start: ", newGame);
-        console.log("currentGames on start: ", newGame);
+        console.log("newGame.moves on start: ", newGame.moves);
         
         socket.to(webGameId).emit("set game", { selectedPlayersColors, fieldData })
         
@@ -114,13 +113,12 @@ io.on("connection", socket => {
 
         console.log("request missing moves");
         console.log("playerId: ", playerId);
-        console.log("lastMoveNum: ", lastMoveNum);
-        console.log("currentGames: ", currentGames);
-
+        
         const game = currentGames.find(game => game.id === webGameId)
         const missingMoves = game.moves.filter(move => move.moveNum > lastMoveNum)
-
-        console.log("game: ", game);
+        
+        console.log("lastMoveNum: ", lastMoveNum);a
+        console.log("number of moves: ", game.moves.length);
         console.log("missingMoves: ", missingMoves);
 
         socket.emit("send missing moves", { missingMoves })
