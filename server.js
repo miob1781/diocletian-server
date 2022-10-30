@@ -19,12 +19,14 @@ let currentGames = []
 // starts a connection to sockets
 io.on("connection", socket => {
     console.log("a user connected");
+    socket.emit("request player id")
 
     socket.on("disconnect", () => console.log("a user disconnected"))
 
     // adds a player to an individual room to register them by their id
     socket.on("register", msg => {
         const { playerId } = msg
+        console.log(playerId + " has registered.");
         socket.join(playerId)
     })
 
@@ -79,12 +81,18 @@ io.on("connection", socket => {
             moves: []
         }
 
-        currentGames.push(newGame)
-
+        
         console.log("newGame on start: ", newGame);
         console.log("currentGames on start: ", newGame);
-
+        
         socket.to(webGameId).emit("set game", { selectedPlayersColors, fieldData })
+        
+        // removes the created game from currentGames after two hours if the game has not ended yet
+        newGame.timeoutID = setTimeout(() => {
+            currentGames = currentGames.filter(game => game.id !== webGameId)
+        }, 1000 * 60 * 60 * 2)
+
+        currentGames.push(newGame)
     })
 
     // sends the field id of a move to all players
@@ -115,12 +123,15 @@ io.on("connection", socket => {
         console.log("game: ", game);
         console.log("missingMoves: ", missingMoves);
 
-        socket.to(playerId).emit("send missing moves", { missingMoves })
+        socket.emit("send missing moves", { missingMoves })
     })
 
     // removes game from current games when game has ended
     socket.on("end", msg => {
         const { webGameId } = msg
+
+        const game = currentGames.find(game => game.id === webGameId)
+        clearTimeout(game.timeoutID)
         currentGames = currentGames.filter(game => game.id !== webGameId)
 
         console.log("currentGames on end: ", currentGames);
