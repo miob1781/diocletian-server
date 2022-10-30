@@ -117,7 +117,7 @@ io.on("connection", socket => {
         const game = currentGames.find(game => game.id === webGameId)
         const missingMoves = game.moves.filter(move => move.moveNum > lastMoveNum)
         
-        console.log("lastMoveNum: ", lastMoveNum);a
+        console.log("lastMoveNum: ", lastMoveNum);
         console.log("number of moves: ", game.moves.length);
         console.log("missingMoves: ", missingMoves);
 
