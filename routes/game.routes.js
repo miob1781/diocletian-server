@@ -134,7 +134,7 @@ router.put("/:id", (req, res, next) => {
                 res.status(204).send()
             })
             .catch(err => {
-                console.log("error: ", err)
+                console.log("Error while updating game: ", err)
                 next(err)
             })
 
@@ -159,7 +159,7 @@ router.delete("/:id", (req, res, next) => {
             res.status(204).send()
         })
         .catch(err => {
-            console.log(err)
+            console.log("Error while deleting game: ", err)
             next(err)
         })
 })
