@@ -86,10 +86,10 @@ io.on("connection", socket => {
         
         socket.to(webGameId).emit("set game", { selectedPlayersColors, fieldData })
         
-        // removes the created game from currentGames after two hours if the game has not ended yet
-        newGame.timeoutID = setTimeout(() => {
+        // removes the created game from currentGames after one hour if the game has not ended yet
+        setTimeout(() => {
             currentGames = currentGames.filter(game => game.id !== webGameId)
-        }, 1000 * 60 * 60 * 2)
+        }, 1000 * 60 * 60)
 
         currentGames.push(newGame)
     })
@@ -126,17 +126,6 @@ io.on("connection", socket => {
                 socket.emit("move", { move: missingMove })
             }
         }
-    })
-
-    // removes game from current games when game has ended
-    socket.on("end", msg => {
-        const { webGameId } = msg
-
-        const game = currentGames.find(game => game.id === webGameId)
-        clearTimeout(game.timeoutID)
-        currentGames = currentGames.filter(game => game.id !== webGameId)
-
-        console.log("currentGames on end: ", currentGames);
     })
 })
 
