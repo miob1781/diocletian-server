@@ -110,17 +110,22 @@ io.on("connection", socket => {
     // sends missing moves in case a connection has been broken
     socket.on("request missing move", msg => {
         const { webGameId, playerId, moveNum } = msg
-
+        
         console.log("request missing move");
         console.log("playerId: ", playerId);
         
         const game = currentGames.find(game => game.id === webGameId)
-        const missingMove = game.moves.find(move => move.moveNum === moveNum)
-        
-        console.log("moveNum: ", moveNum);
-        console.log("missingMove: ", missingMove);
 
-        socket.emit("move", { move: missingMove })
+        if (game) {
+            const missingMove = game.moves.find(move => move.moveNum === moveNum)
+            
+            if (missingMove) {
+                console.log("moveNum: ", moveNum);
+                console.log("missingMove: ", missingMove);
+                
+                socket.emit("move", { move: missingMove })
+            }
+        }
     })
 
     // removes game from current games when game has ended
